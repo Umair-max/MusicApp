@@ -1,0 +1,124 @@
+// const track1 = {
+//   url: require('../data/musics/intoYourArms.mp3'),
+//   title: 'Into your arms',
+//   artist: 'Witt Lowry',
+//   artwork:
+//     'https://i1.sndcdn.com/artworks-jxyaDuJ4WO2g8sVx-8aVhHQ-t500x500.jpg',
+//   duration: 192,
+// };
+
+// const track2 = {
+//   url: require('../data/musics/alone.mp3'),
+//   title: 'Alone',
+//   artist: 'Alen Walker',
+//   artwork: 'https://i1.sndcdn.com/artworks-000197801117-grcthv-t500x500.jpg',
+//   duration: 243,
+// };
+
+// const track3 = {
+//   url: require('../data/musics/ignite.mp3'),
+//   title: 'Ignite',
+//   artist: 'Alen Walker',
+//   artwork:
+//     'https://i1.sndcdn.com/artworks-jcMOPUJy8u60rAu1-44qJow-t500x500.jpg',
+//   duration: 205.8,
+// };
+
+// const track4 = {
+//   url: require('../data/musics/darkside.mp3'),
+//   title: 'Dark side',
+//   artist: 'Witt Lowry',
+//   artwork:
+//     'https://i1.https://gp1.wac.edgecastcdn.net/802892/http_public_production/photos/images/31022688/original/resize:600x700/crop:x0y143w683h512/aspect:1.0/hash:1537559221/alanwalkerdarkside.jpg.com/artworks-jxyaDuJ4WO2g8sVx-8aVhHQ-t500x500.jpg',
+//   duration: 215.4,
+// };
+
+// const track5 = {
+//   url: require('../data/musics/coldplay.mp3'),
+//   title: 'Hymn For The Weekend',
+//   artist: 'Coldplay',
+//   artwork: 'https://pbs.twimg.com/media/FgZnyJWXgAAMTn8.jpg',
+//   duration: 210,
+// };
+
+  // TrackPlayer.setupPlayer().then(() => {
+  //   // The player is ready to be used
+  // });
+
+  // const setupPlayer = async () => {
+  //   try {
+  //     await TrackPlayer.setupPlayer();
+  //     await TrackPlayer.updateOptions({
+  //       // Media controls capabilities
+  //       capabilities: [
+  //         Capability.Play,
+  //         Capability.Pause,
+  //         Capability.SkipToNext,
+  //         Capability.SkipToPrevious,
+  //         Capability.Stop,
+  //       ],
+
+  //       // Capabilities that will show up when the notification is in the compact form on Android
+  //       compactCapabilities: [Capability.Play, Capability.Pause],
+  //     });
+  //     await TrackPlayer.add(songs);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
+  // const scrollToNextItem = () => {
+  //   const nextIndex = (currentIndex + 1) % songs.length;
+  //   ref.current.scrollToIndex({index: nextIndex, animated: true});
+  //   setCurrentIndex(nextIndex);
+  // };
+
+  // const scrollToPreviousItem = () => {
+  //   const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
+  //   ref.current.scrollToIndex({index: prevIndex, animated: true});
+  //   setCurrentIndex(prevIndex);
+  // };
+
+  // const onMomentumScrollEnd = event => {
+  //   const contentOffset = event.nativeEvent.contentOffset;
+  //   console.log(contentOffset);
+  //   const index = Math.round(contentOffset.x / screenWidth);
+  //   setCurrentIndex(index);
+  // };
+
+  // const playbackState = usePlaybackState;
+
+  // useEffect(() => {
+  // playerInfo();
+  // setupPlayer();
+  // }, []);
+
+  // const setupPlayer = async () => {
+  // await TrackPlayer.setupPlayer();
+  //   await TrackPlayer.add([track1, track2, track3, track4, track5]);
+  // };
+
+  // const playerInfo = async () => {
+  //   const state = await TrackPlayer.getState();
+  //   if (state === State.Playing) {
+  //     console.log('The player is playing');
+  //   }
+  //   let trackIndex = await TrackPlayer.getCurrentTrack();
+  //   let trackObject = await TrackPlayer.getTrack(trackIndex);
+  //   console.log(`Title: ${trackObject.title}`);
+
+  //   const position = await TrackPlayer.getPosition();
+  //   const duration = await TrackPlayer.getDuration();
+  //   console.log(`${duration - position} seconds left.`);
+  // };
+
+  // const togglePlayback = async playbackState => {
+  //   const currentTrack = await TrackPlayer.getCurrentTrack();
+  //   if (currentTrack !== null) {
+  //     if (currentTrack == State.Paused) {
+  //       await TrackPlayer.play();
+  //     } else {
+  //       await TrackPlayer.pause();
+  //     }
+  //   }
+  // };
