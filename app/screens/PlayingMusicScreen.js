@@ -5,14 +5,9 @@ import {
   SafeAreaView,
   Text,
   StatusBar,
-  TouchableWithoutFeedback,
   FlatList,
-  Image,
-  ViewComponent,
   Dimensions,
 } from 'react-native';
-import {BlurView} from '@react-native-community/blur';
-import Slider from 'react-native-slider';
 import TrackPlayer, {
   Capability,
   Event,
@@ -24,73 +19,57 @@ import TrackPlayer, {
   useTrackPlayerEvents,
   useTrackPlayerProgress,
 } from 'react-native-track-player';
-const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+import Slider from '@brlja/react-native-slider';
+import {BlurView} from '@react-native-community/blur';
+import {useNavigation} from '@react-navigation/native';
+
 import songs from '../data/songsData/songsData';
 import Icon from '../components/Icon';
 import colors from '../config/colors';
-import {useNavigation} from '@react-navigation/native';
+import PlayingMuicCard from '../components/PlayingMuicCard';
 
 function PlayingMusicScreen(props) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [looping, setLooping] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const progress = useProgress();
   const navigation = useNavigation();
   const ref = useRef();
 
-  // useEffect(() => {
-  // setupPlayer();
-
-  // const listeners = [
-  //   useTrackPlayerEvents([TrackPlayerEvents.PLAYBACK_STATE], event => {
-  //     if (event.state === State.Playing) {
-  //       setIsPlaying(true);
-  //     } else {
-  //       setIsPlaying(false);
-  //     }
-  //   }),
-  // ];
-  // return () => {
-  //   listeners.forEach(listener => listener.remove()); // Clean up the event listeners when the component unmounts
-  // };
-
-  // const listener = TrackPlayer.addEventListener(
-  //   'playback-state',
-  //   ({state}) => {
-  //     if (state === State.Playing) {
-  //       setIsPlaying(true);
-  //     } else {
-  //       setIsPlaying(false);
-  //     }
-  //   },
-  // );
-  // return () => {
-  //   listener.remove();
-  // };
-  // }, []);
-
   useEffect(() => {
-    setupPlayer();
+    setPlayer();
 
-    const playbackStateListener = async data => {
-      if (data.state === State.Playing) {
+    const playbackStateListener = async songs => {
+      if (songs.state === State.Playing) {
         setIsPlaying(true);
+        console.log('playing');
       } else {
         setIsPlaying(false);
+        console.log('notPlaying');
       }
     };
-
-    // Subscribe to the playback state event
     TrackPlayer.addEventListener('playback-state', playbackStateListener);
 
-    // Clean up the event listener when the component unmounts
     return () => {
-      TrackPlayer.removeEventListener('playback-state', playbackStateListener);
+      TrackPlayer.remove('playback-state', playbackStateListener);
     };
   }, []);
 
-  const setupPlayer = async () => {
+  const setPlayer = async () => {
     await TrackPlayer.setupPlayer();
     await TrackPlayer.add(songs);
+    // Enable loop capability
+    // await TrackPlayer.updateOptions({
+    //   capabilities: [
+    //     Capability.Play,
+    //     Capability.Pause,
+    //     Capability.SkipToNext,
+    //     Capability.SkipToPrevious,
+    //     Capability.Stop,
+    //     Capability.Seek,
+    //     Capability.Loop,
+    //   ],
+    // });
   };
 
   const togglePlayback = async () => {
@@ -114,16 +93,24 @@ function PlayingMusicScreen(props) {
     }
   };
 
+  const toggleLoop = async () => {
+    const currentLooping = await TrackPlayer.getRepeatMode();
+    await TrackPlayer.setRepeatMode(!currentLooping);
+    setLooping(!currentLooping);
+    console.log('looping');
+  };
   const scrollToNextItem = () => {
     const nextIndex = (currentIndex + 1) % songs.length;
     ref.current.scrollToIndex({index: nextIndex, animated: true});
     setCurrentIndex(nextIndex);
+    playNext();
   };
 
   const scrollToPreviousItem = () => {
     const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
     ref.current.scrollToIndex({index: prevIndex, animated: true});
     setCurrentIndex(prevIndex);
+    playPrevious();
   };
 
   return (
@@ -155,40 +142,32 @@ function PlayingMusicScreen(props) {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           data={songs}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({item}) => (
-            <View style={{flexDirection: 'column'}}>
-              <View style={styles.ImageContainer}>
-                <Image
-                  resizeMode="cover"
-                  style={styles.poster}
-                  source={{
-                    uri: item.poster,
-                  }}
-                />
-              </View>
-              <View
-                style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                <Text style={styles.primaryText} numberOfLines={1}>
-                  {item.title}
-                </Text>
-                <Icon source={require('../assets/heart.png')} IconSize={22} />
-              </View>
-              <Text style={styles.secondaryText}>{item.artist}</Text>
-            </View>
-          )}
+          // keyExtractor={(item, index) => index.toString()}
+          renderItem={({item, index}) => <PlayingMuicCard item={item} />}
         />
 
         <Slider
+          minimumValue={0}
+          value={progress.position}
+          maximumValue={progress.duration}
           minimumTrackTintColor={colors.orange}
+          maximumTrackTintColor={colors.white}
           thumbTintColor={colors.white}
-          maximumTrackTintColor={colors.light}
-          onSlidingComplete={() => {}}
+          onValueChange={async value => {
+            await TrackPlayer.seekTo(value);
+          }}
+          onSlidingComplete={async value => {
+            await TrackPlayer.seekTo(value);
+          }}
         />
 
         <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-          <Text style={styles.secondaryText}>3:20</Text>
-          <Text style={styles.secondaryText}>4:20</Text>
+          <Text style={styles.secondaryText}>
+            {new Date(progress.position * 1000).toString().substring(19, 24)}
+          </Text>
+          <Text style={styles.secondaryText}>
+            {new Date(progress.duration * 1000).toString().substring(19, 24)}
+          </Text>
         </View>
         <View style={styles.iconContainer}>
           <Icon
@@ -199,32 +178,39 @@ function PlayingMusicScreen(props) {
             <Icon
               source={require('../assets/next-button.png')}
               IconSize={26}
-              onPress={() => {
-                playPrevious();
-                scrollToPreviousItem();
-              }}
+              onPress={() => scrollToPreviousItem()}
             />
           </View>
-          <Icon
-            iconColor={colors.dark}
-            backgroundColor="white"
-            source={require('../assets/play.png')}
-            IconSize={20}
-            iconBackgroundSize={60}
-            borderRadius={30}
-            onPress={() => togglePlayback()}
-          />
+          {isPlaying ? (
+            <Icon
+              iconColor={colors.dark}
+              backgroundColor="white"
+              source={require('../assets/pause.png')}
+              IconSize={24}
+              iconBackgroundSize={60}
+              borderRadius={30}
+              onPress={() => togglePlayback()}
+            />
+          ) : (
+            <Icon
+              iconColor={colors.dark}
+              backgroundColor="white"
+              source={require('../assets/play.png')}
+              IconSize={20}
+              iconBackgroundSize={60}
+              borderRadius={30}
+              onPress={() => togglePlayback()}
+            />
+          )}
           <Icon
             source={require('../assets/next-button.png')}
             IconSize={26}
-            onPress={() => {
-              playNext();
-              scrollToNextItem();
-            }}
+            onPress={() => scrollToNextItem()}
           />
           <Icon
             iconColor={colors.grey}
             source={require('../assets/refresh.png')}
+            onPress={() => toggleLoop()}
           />
         </View>
       </SafeAreaView>
@@ -263,27 +249,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  ImageContainer: {
-    overflow: 'hidden',
-    alignSelf: 'center',
-    width: screenWidth - 40,
-    height: screenHeight / 2 - 80,
-    marginTop: 20,
-    marginBottom: 10,
-    padding: 10,
-    // shadowColor: '#ccc',
-    // shadowOpacity: 0.4,
-    // shadowRadius: 3,
-    // shadowOffset: {
-    //   width: 5,
-    //   height: 5,
-    // },
-  },
-  primaryText: {
-    color: colors.light,
-    fontSize: 26,
-    letterSpacing: 1,
-  },
   secondaryText: {
     color: colors.grey,
     fontSize: 18,
@@ -293,11 +258,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     marginTop: 40,
     alignItems: 'center',
-  },
-  poster: {
-    height: '100%',
-    width: '100%',
-    borderRadius: 50,
   },
 });
 export default PlayingMusicScreen;

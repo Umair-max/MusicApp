@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useRef} from 'react';
 import {
   StyleSheet,
   View,
@@ -7,18 +7,24 @@ import {
   StatusBar,
   FlatList,
   TouchableWithoutFeedback,
+  TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import {BlurView} from '@react-native-community/blur';
 import Icon from '../components/Icon';
 import colors from '../config/colors';
 import MusicCard from '../components/MusicCard';
 import RecentMusicCard from '../components/RecentMusicCard';
+import * as Animatable from 'react-native-animatable';
+// MyCustomComponent = Animatable.createAnimatableComponent(Icon);
 
 import songs from '../data/songsData/songsData';
 import {useNavigation} from '@react-navigation/native';
+import Search from '../components/Search';
 
 function HomeScreen(props) {
   const navigation = useNavigation();
+
   return (
     <View style={styles.background}>
       <StatusBar barStyle={'light-content'} />
@@ -31,13 +37,7 @@ function HomeScreen(props) {
       <View style={[styles.backView, {left: -20, bottom: 0}]}></View>
       <BlurView style={styles.blur} blurType="dark" blurAmount={40}></BlurView>
       <SafeAreaView>
-        <View style={{marginLeft: 20}}>
-          <Icon
-            source={require('../assets/search.png')}
-            backgroundColor={colors.white}
-            iconColor={colors.black}
-          />
-        </View>
+        <Search />
         <Text style={styles.headerText}>Find your favorite music</Text>
         <View style={styles.textContainer}>
           <Text style={styles.primary}>Musics🔥</Text>
@@ -52,11 +52,6 @@ function HomeScreen(props) {
           data={songs}
           renderItem={({item}) => <MusicCard item={item} />}
         />
-        <View style={styles.textContainer}>
-          <Text style={styles.primary}>Recently Played</Text>
-          <Text style={styles.secondary}>View All</Text>
-        </View>
-        <RecentMusicCard />
       </SafeAreaView>
     </View>
   );
