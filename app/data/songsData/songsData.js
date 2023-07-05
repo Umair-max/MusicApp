@@ -36,5 +36,20 @@ const songs = [
     poster: 'https://i1.sndcdn.com/artworks-000233607857-fw43by-t500x500.jpg',
     id: 5,
   },
+  {
+    url: require('../musics/fiftyFifty.mp3'),
+    title: 'Cupid',
+    artist: 'Fifty Fifty',
+    poster:
+      'https://i1.sndcdn.com/artworks-qG8PW9UyTYLL2TWD-sqGyOQ-t500x500.jpg',
+    id: 6,
+  },
+  {
+    url: require('../musics/withoutMe.mp3'),
+    title: 'Without me',
+    artist: 'Halsey',
+    poster: 'https://i1.sndcdn.com/artworks-000509438718-zcbunk-t500x500.jpg',
+    id: 7,
+  },
 ];
 export default songs;

@@ -7,7 +7,11 @@ import {
   StatusBar,
   FlatList,
 } from 'react-native';
-import TrackPlayer, {State, useProgress} from 'react-native-track-player';
+import TrackPlayer, {
+  State,
+  useProgress,
+  Event,
+} from 'react-native-track-player';
 import Slider from '@brlja/react-native-slider';
 import {BlurView} from '@react-native-community/blur';
 import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
@@ -19,6 +23,7 @@ import colors from '../config/colors';
 import PlayingMuicCard from '../components/PlayingMuicCard';
 
 function PlayingMusicScreen(props) {
+  const [data, setData] = useState(songs);
   const [isPlaying, setIsPlaying] = useState(false);
   const [looping, setLooping] = useState(false);
   const [shuffle, setShuffle] = useState(false);
@@ -33,8 +38,8 @@ function PlayingMusicScreen(props) {
     // if (isfocused) {
     setPlayer();
 
-    const playbackStateListener = async songs => {
-      if (songs.state === State.Playing) {
+    const playbackStateListener = async data => {
+      if (data.state === State.Playing) {
         setIsPlaying(true);
         console.log('playing');
       } else {
@@ -44,6 +49,14 @@ function PlayingMusicScreen(props) {
     };
 
     TrackPlayer.addEventListener('playback-state', playbackStateListener);
+
+    //new
+    // TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async data => {
+    // if (progress. > 0) {
+    // scrollToNextItem();
+    // }
+    // });
+    //new
 
     return () => {
       TrackPlayer.remove('playback-state', playbackStateListener);
@@ -69,7 +82,7 @@ function PlayingMusicScreen(props) {
 
   const setPlayer = async () => {
     await TrackPlayer.setupPlayer();
-    await TrackPlayer.add(songs);
+    await TrackPlayer.add(data);
   };
 
   const togglePlayback = async () => {
@@ -89,7 +102,7 @@ function PlayingMusicScreen(props) {
   };
 
   const scrollToNextItem = () => {
-    if (currentIndex <= songs.length - 2) {
+    if (currentIndex <= data.length - 2) {
       const nextIndex = currentIndex + 1;
       ref.current.scrollToIndex({index: nextIndex, animated: true});
       setCurrentIndex(nextIndex);
@@ -128,13 +141,15 @@ function PlayingMusicScreen(props) {
     await TrackPlayer.add(queue);
     setShuffle(true);
     console.log('shuffled');
+    setData(queue);
   };
 
   handleCancelShuffle = async () => {
     TrackPlayer.reset();
-    TrackPlayer.add(songs);
+    TrackPlayer.add(data);
     setShuffle(false);
     console.log('removed shuffle');
+    setData(songs);
   };
 
   const storeItem = async index => {
@@ -165,7 +180,7 @@ function PlayingMusicScreen(props) {
   };
 
   const playMusic = async index => {
-    const trackId = songs[index].id - 1;
+    const trackId = data[index].id - 1;
     setCurrentIndex(trackId);
 
     await TrackPlayer.skip(trackId);
@@ -204,7 +219,7 @@ function PlayingMusicScreen(props) {
           ref={ref}
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          data={songs}
+          data={data}
           onScrollToIndexFailed={info => {
             console.log('Failed to scroll to index:', info.index);
             const wait = new Promise(resolve => setTimeout(resolve, 700));
