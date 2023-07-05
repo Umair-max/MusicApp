@@ -6,22 +6,12 @@ import {
   Text,
   StatusBar,
   FlatList,
-  Dimensions,
 } from 'react-native';
-import TrackPlayer, {
-  Capability,
-  Event,
-  RepeatMode,
-  State,
-  usePlaybackState,
-  useProgress,
-  TrackPlayerEvents,
-  useTrackPlayerEvents,
-  useTrackPlayerProgress,
-} from 'react-native-track-player';
+import TrackPlayer, {State, useProgress} from 'react-native-track-player';
 import Slider from '@brlja/react-native-slider';
 import {BlurView} from '@react-native-community/blur';
-import {useNavigation} from '@react-navigation/native';
+import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import songs from '../data/songsData/songsData';
 import Icon from '../components/Icon';
@@ -31,12 +21,16 @@ import PlayingMuicCard from '../components/PlayingMuicCard';
 function PlayingMusicScreen(props) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [looping, setLooping] = useState(false);
+  const [shuffle, setShuffle] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const progress = useProgress();
   const navigation = useNavigation();
   const ref = useRef();
+  const route = useRoute();
+  const isfocused = useIsFocused();
 
   useEffect(() => {
+    // if (isfocused) {
     setPlayer();
 
     const playbackStateListener = async songs => {
@@ -48,28 +42,34 @@ function PlayingMusicScreen(props) {
         console.log('notPlaying');
       }
     };
+
     TrackPlayer.addEventListener('playback-state', playbackStateListener);
 
     return () => {
       TrackPlayer.remove('playback-state', playbackStateListener);
     };
+    // }
   }, []);
+
+  useEffect(() => {
+    try {
+      if (isfocused) {
+        if (route.params.index >= 0) {
+          const {index} = route.params;
+          console.log(index);
+          ref.current?.scrollToIndex({index: index, animated: true});
+          playMusic(index);
+          console.log('up', index);
+        }
+      }
+    } catch (e) {
+      console.log('e >>>>>>>>>>', e);
+    }
+  }, [route.params, isfocused, props]);
 
   const setPlayer = async () => {
     await TrackPlayer.setupPlayer();
     await TrackPlayer.add(songs);
-    // Enable loop capability
-    // await TrackPlayer.updateOptions({
-    //   capabilities: [
-    //     Capability.Play,
-    //     Capability.Pause,
-    //     Capability.SkipToNext,
-    //     Capability.SkipToPrevious,
-    //     Capability.Stop,
-    //     Capability.Seek,
-    //     Capability.Loop,
-    //   ],
-    // });
   };
 
   const togglePlayback = async () => {
@@ -85,32 +85,91 @@ function PlayingMusicScreen(props) {
   };
 
   const playPrevious = async () => {
-    const currentPosition = await TrackPlayer.getPosition();
-    if (currentPosition < 3) {
-      await TrackPlayer.skipToPrevious();
-    } else {
-      await TrackPlayer.seekTo(0);
+    await TrackPlayer.skipToPrevious();
+  };
+
+  const scrollToNextItem = () => {
+    if (currentIndex <= songs.length - 2) {
+      const nextIndex = currentIndex + 1;
+      ref.current.scrollToIndex({index: nextIndex, animated: true});
+      setCurrentIndex(nextIndex);
+      playNext();
     }
   };
 
-  const toggleLoop = async () => {
+  const scrollToPreviousItem = () => {
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      ref.current.scrollToIndex({index: prevIndex, animated: true});
+      setCurrentIndex(prevIndex);
+      playPrevious();
+    }
+  };
+
+  const handleLoop = async () => {
     const currentLooping = await TrackPlayer.getRepeatMode();
     await TrackPlayer.setRepeatMode(!currentLooping);
     setLooping(!currentLooping);
-    console.log('looping');
-  };
-  const scrollToNextItem = () => {
-    const nextIndex = (currentIndex + 1) % songs.length;
-    ref.current.scrollToIndex({index: nextIndex, animated: true});
-    setCurrentIndex(nextIndex);
-    playNext();
+    looping ? console.log('not loopong') : console.log('looping');
   };
 
-  const scrollToPreviousItem = () => {
-    const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-    ref.current.scrollToIndex({index: prevIndex, animated: true});
-    setCurrentIndex(prevIndex);
-    playPrevious();
+  const settingUpShuffle = () => {
+    if (!shuffle) {
+      handleShuffle();
+    } else if (shuffle) {
+      handleCancelShuffle();
+    }
+  };
+
+  const handleShuffle = async () => {
+    let queue = await TrackPlayer.getQueue();
+    await TrackPlayer.reset();
+    queue.sort(() => Math.random() - 0.5);
+    await TrackPlayer.add(queue);
+    setShuffle(true);
+    console.log('shuffled');
+  };
+
+  handleCancelShuffle = async () => {
+    TrackPlayer.reset();
+    TrackPlayer.add(songs);
+    setShuffle(false);
+    console.log('removed shuffle');
+  };
+
+  const storeItem = async index => {
+    try {
+      const data = index;
+
+      const placesString = await AsyncStorage.getItem('index');
+      let places = [];
+
+      if (placesString) {
+        places = JSON.parse(placesString);
+      }
+      places.push(data);
+      const updatedPlacesString = JSON.stringify(places);
+      await AsyncStorage.setItem('index', updatedPlacesString);
+      console.log('done');
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const removeItem = async index => {
+    const storedLocations = await AsyncStorage.getItem('index');
+    let updatedLocations = JSON.parse(storedLocations);
+
+    updatedLocations.splice(index, 1);
+    await AsyncStorage.setItem('index', JSON.stringify(updatedLocations));
+  };
+
+  const playMusic = async index => {
+    const trackId = songs[index].id - 1;
+    setCurrentIndex(trackId);
+
+    await TrackPlayer.skip(trackId);
+    await TrackPlayer.play();
   };
 
   return (
@@ -131,19 +190,41 @@ function PlayingMusicScreen(props) {
             IconSize={17}
             backgroundColor={colors.white}
             iconColor={colors.black}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              navigation.goBack();
+              TrackPlayer.pause();
+            }}
           />
           <Text style={styles.headerText}>Playing Music</Text>
           <Icon />
         </View>
         <FlatList
+          scrollEnabled={false}
           horizontal
           ref={ref}
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           data={songs}
-          // keyExtractor={(item, index) => index.toString()}
-          renderItem={({item, index}) => <PlayingMuicCard item={item} />}
+          onScrollToIndexFailed={info => {
+            console.log('Failed to scroll to index:', info.index);
+            const wait = new Promise(resolve => setTimeout(resolve, 700));
+            wait.then(() => {
+              ref.current.scrollToIndex({
+                index: info.index,
+                animated: false,
+              });
+              console.log('down', info.index);
+              playMusic(info.index);
+            });
+          }}
+          renderItem={({item, index}) => (
+            <PlayingMuicCard
+              onUnpress={() => removeItem(index)}
+              item={item}
+              index={index}
+              onPress={() => storeItem(index)}
+            />
+          )}
         />
 
         <Slider
@@ -171,8 +252,12 @@ function PlayingMusicScreen(props) {
         </View>
         <View style={styles.iconContainer}>
           <Icon
-            iconColor={colors.grey}
+            iconColor={shuffle ? colors.dark : colors.grey}
             source={require('../assets/crossed-arrows.png')}
+            onPress={() => settingUpShuffle()}
+            borderRadius={20}
+            backgroundColor={shuffle ? colors.white : null}
+            iconBackgroundSize={30}
           />
           <View style={{transform: [{rotate: '180deg'}]}}>
             <Icon
@@ -181,36 +266,31 @@ function PlayingMusicScreen(props) {
               onPress={() => scrollToPreviousItem()}
             />
           </View>
-          {isPlaying ? (
-            <Icon
-              iconColor={colors.dark}
-              backgroundColor="white"
-              source={require('../assets/pause.png')}
-              IconSize={24}
-              iconBackgroundSize={60}
-              borderRadius={30}
-              onPress={() => togglePlayback()}
-            />
-          ) : (
-            <Icon
-              iconColor={colors.dark}
-              backgroundColor="white"
-              source={require('../assets/play.png')}
-              IconSize={20}
-              iconBackgroundSize={60}
-              borderRadius={30}
-              onPress={() => togglePlayback()}
-            />
-          )}
+          <Icon
+            iconColor={colors.dark}
+            backgroundColor="white"
+            source={
+              isPlaying
+                ? require('../assets/pause.png')
+                : require('../assets/play.png')
+            }
+            IconSize={isPlaying ? 24 : 20}
+            iconBackgroundSize={60}
+            borderRadius={30}
+            onPress={() => togglePlayback()}
+          />
           <Icon
             source={require('../assets/next-button.png')}
             IconSize={26}
             onPress={() => scrollToNextItem()}
           />
           <Icon
-            iconColor={colors.grey}
+            iconColor={looping ? colors.dark : colors.grey}
             source={require('../assets/refresh.png')}
-            onPress={() => toggleLoop()}
+            onPress={() => handleLoop()}
+            borderRadius={20}
+            backgroundColor={looping ? colors.white : null}
+            iconBackgroundSize={30}
           />
         </View>
       </SafeAreaView>

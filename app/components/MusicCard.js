@@ -6,7 +6,8 @@ import colors from '../config/colors';
 function MusicCard({item}) {
   const navigation = useNavigation();
   return (
-    <TouchableWithoutFeedback onPress={() => navigation.navigate('Playing')}>
+    <TouchableWithoutFeedback
+      onPress={() => navigation.navigate('Playing', {index: item.id - 1})}>
       <View style={styles.container}>
         <Image source={{uri: item.poster}} style={styles.image} />
       </View>

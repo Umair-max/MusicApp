@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React from 'react';
 import {
   StyleSheet,
   View,
@@ -7,16 +7,10 @@ import {
   StatusBar,
   FlatList,
   TouchableWithoutFeedback,
-  TouchableOpacity,
-  TextInput,
 } from 'react-native';
 import {BlurView} from '@react-native-community/blur';
-import Icon from '../components/Icon';
 import colors from '../config/colors';
 import MusicCard from '../components/MusicCard';
-import RecentMusicCard from '../components/RecentMusicCard';
-import * as Animatable from 'react-native-animatable';
-// MyCustomComponent = Animatable.createAnimatableComponent(Icon);
 
 import songs from '../data/songsData/songsData';
 import {useNavigation} from '@react-navigation/native';
@@ -33,7 +27,8 @@ function HomeScreen(props) {
         style={[
           styles.backView,
           {right: -20, top: '30%', width: 300, height: 300, borderRadius: 150},
-        ]}></View>
+        ]}
+      />
       <View style={[styles.backView, {left: -20, bottom: 0}]}></View>
       <BlurView style={styles.blur} blurType="dark" blurAmount={40}></BlurView>
       <SafeAreaView>

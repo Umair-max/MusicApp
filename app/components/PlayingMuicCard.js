@@ -6,17 +6,8 @@ const screenHeight = Dimensions.get('window').height;
 import Icon from './Icon';
 import colors from '../config/colors';
 
-function PlayingMuicCard({item}) {
-  const [visible, setVisible] = useState();
-  const [ids, setIds] = useState();
-
-  const addId = () => {
-    const array = [];
-    array.push(item.id);
-    setIds(array);
-    console.log(array);
-  };
-
+function PlayingMuicCard({item, onPress, onUnpress}) {
+  const [visible, setVisible] = useState(false);
   return (
     <View style={{flexDirection: 'column'}}>
       <View style={styles.ImageContainer}>
@@ -38,6 +29,7 @@ function PlayingMuicCard({item}) {
             IconSize={22}
             iconColor={'red'}
             onPress={() => {
+              onUnpress();
               setVisible(false);
             }}
           />
@@ -46,8 +38,8 @@ function PlayingMuicCard({item}) {
             source={require('../assets/heart.png')}
             IconSize={22}
             onPress={() => {
+              onPress();
               setVisible(true);
-              addId();
             }}
           />
         )}
@@ -65,13 +57,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
     padding: 10,
-    // shadowColor: colors.grey,
-    // shadowOpacity: 0.4,
-    // shadowRadius: 3,
-    // shadowOffset: {
-    //   width: 5,
-    //   height: 5,
-    // },
   },
   poster: {
     height: '100%',

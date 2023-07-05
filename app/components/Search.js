@@ -82,7 +82,7 @@ function Search(props) {
               <Text
                 style={styles.moviesTitle}
                 onPress={() => {
-                  navigation.navigate('Playing', {item: item});
+                  navigation.navigate('Playing', {index: item.id - 1});
                   searchFilterFunction(null);
                   setVisible(false);
                 }}>

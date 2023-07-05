@@ -30,13 +30,22 @@ function SeeAllScreen(props) {
       <View style={[styles.backView, {left: -20, bottom: 0}]}></View>
       <BlurView style={styles.blur} blurType="dark" blurAmount={40}></BlurView>
       <SafeAreaView style={{paddingHorizontal: 20}}>
-        <Icon
-          source={require('../assets/back.png')}
-          onPress={() => navigation.goBack()}
-          backgroundColor={colors.white}
-          iconColor={colors.black}
-          IconSize={17}
-        />
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+          <Icon
+            source={require('../assets/back.png')}
+            onPress={() => navigation.goBack()}
+            backgroundColor={colors.white}
+            iconColor={colors.black}
+            IconSize={17}
+          />
+          <Text style={styles.headerText}>Musics🔥</Text>
+          <Icon />
+        </View>
         <View style={{height: '90%', marginTop: 20}}>
           <FlatList
             showsVerticalScrollIndicator={false}
@@ -45,7 +54,9 @@ function SeeAllScreen(props) {
             data={data}
             renderItem={({item}) => (
               <TouchableWithoutFeedback
-                onPress={() => navigation.navigate('Playing')}>
+                onPress={() =>
+                  navigation.navigate('Playing', {index: item.id - 1})
+                }>
                 <View style={styles.container}>
                   <Image
                     source={{uri: item.poster}}
@@ -81,6 +92,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#590696',
     borderRadius: 100,
     zIndex: -2,
+  },
+  headerText: {
+    color: colors.light,
+    fontSize: 24,
+    fontWeight: '500',
   },
   container: {
     height: 250,
